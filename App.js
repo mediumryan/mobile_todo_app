@@ -1,15 +1,14 @@
 import React, { useEffect, useState } from "react";
-import styled from "styled-components/native";
 import { theme } from "./colors";
+import styled from "styled-components/native";
 import { TouchableOpacity, Alert } from "react-native";
-import { Ionicons, MaterialIcons } from "@expo/vector-icons";
+import { Feather, AntDesign } from "@expo/vector-icons";
 import Checkbox from "expo-checkbox";
 import AsyncStorage from "@react-native-async-storage/async-storage";
 
 export default function App() {
-  const ITEM_KEY = "@toDos";
+  // Handling work <--> travel
   const WORKING_KEY = "@working";
-
   const [working, setWorking] = useState(true);
   const work = () => {
     setWorking(true);
@@ -19,7 +18,6 @@ export default function App() {
     setWorking(false);
     saveWorking(false);
   };
-
   const saveWorking = async (value) => {
     try {
       await AsyncStorage.setItem(WORKING_KEY, JSON.stringify(value));
@@ -27,7 +25,6 @@ export default function App() {
       // saving error
     }
   };
-
   const getWorking = async () => {
     try {
       const s = await AsyncStorage.getItem(WORKING_KEY);
@@ -37,14 +34,15 @@ export default function App() {
     }
   };
 
-  const [isChecked, setChecked] = useState(false);
-
+  // About Text
   const [text, setText] = useState("");
-  const getToDos = (payload) => {
+  const getTextValue = (payload) => {
     setText(payload);
   };
+
+  // About TodoItems
   const [toDos, setToDos] = useState({});
-  const submitTodos = () => {
+  const addToDos = async () => {
     if (text === "") {
       return;
     }
@@ -53,22 +51,22 @@ export default function App() {
       [Date.now()]: { text, working, isChecked, isEditing },
     };
     setToDos(newToDos);
-    saveToDos(newToDos);
+    await saveToDos(newToDos);
     setText("");
   };
 
+  // Persist toDos
+  const TODO_KEY = "@toDos";
   const saveToDos = async (value) => {
     try {
-      const s = JSON.stringify(value);
-      await AsyncStorage.setItem(ITEM_KEY, s);
+      await AsyncStorage.setItem(TODO_KEY, JSON.stringify(value));
     } catch (e) {
       // saving error
     }
   };
-
-  const getData = async () => {
+  const getToDos = async () => {
     try {
-      const s = await AsyncStorage.getItem(ITEM_KEY);
+      const s = await AsyncStorage.getItem(TODO_KEY);
       return s != null ? setToDos(JSON.parse(s)) : null;
     } catch (e) {
       // error reading value
@@ -76,49 +74,49 @@ export default function App() {
   };
 
   useEffect(() => {
-    getData();
+    getToDos();
     getWorking();
   }, []);
 
+  // Delete ToDos
   const deleteToDos = (value) => {
-    Alert.alert("해당 항목을 삭제합니다.", "정말 삭제하시겠습니까?", [
+    Alert.alert("해당 항목을 제거합니다", "정말로 실행하시겠습니까?", [
       {
-        text: "네, 삭제할게요.",
-        onPress: () => {
+        text: "실행",
+        onPress: async () => {
           const newToDos = { ...toDos };
           delete newToDos[value];
           setToDos(newToDos);
-          saveToDos(newToDos);
+          await saveToDos(newToDos);
         },
-      },
-      {
-        text: "아뇨, 역시 괜찮습니다.",
         style: "cancel",
       },
+      { text: "취소" },
     ]);
   };
 
-  const handleCheckBox = async (value) => {
+  // Handle CheckBox
+  const [isChecked, setChecked] = useState(false);
+  const handleCheck = async (value) => {
     const newToDos = { ...toDos };
     newToDos[value].isChecked = !newToDos[value].isChecked;
     setToDos(newToDos);
     await saveToDos(newToDos);
   };
 
+  // Editing Text value
   const [isEditing, setEditing] = useState(false);
-
-  const handleEdit = async (value) => {
+  const [edit, setEdit] = useState("");
+  const editToDos = async (value) => {
     const newToDos = { ...toDos };
     newToDos[value].isEditing = !newToDos[value].isEditing;
     setToDos(newToDos);
     await saveToDos(newToDos);
   };
-
-  const [edit, setEdit] = useState("");
   const getEditText = (payload) => {
     setEdit(payload);
   };
-  const editTextValue = async (value) => {
+  const saveEditValue = async (value) => {
     const newToDos = { ...toDos };
     newToDos[value].text = edit;
     newToDos[value].isEditing = !newToDos[value].isEditing;
@@ -129,7 +127,7 @@ export default function App() {
 
   return (
     <MainContainer>
-      <HeaderContainer>
+      <HeaderBox>
         <TouchableOpacity onPress={work}>
           <HeaderBtn style={{ color: working ? "white" : theme.grey }}>
             Work
@@ -140,66 +138,62 @@ export default function App() {
             Travel
           </HeaderBtn>
         </TouchableOpacity>
-      </HeaderContainer>
+      </HeaderBox>
       <InputBox
-        placeholder={working ? "What will you do?" : "Where do you want to go?"}
-        onChangeText={getToDos}
+        placeholder={working ? "할 일을 적어보세요." : "어디에 가고싶죠?"}
         value={text}
+        onChangeText={getTextValue}
         returnKeyType="done"
-        onSubmitEditing={submitTodos}
+        onSubmitEditing={() => {
+          addToDos();
+        }}
       />
       <ListBox>
         {Object.keys(toDos).map((item) => {
           return toDos[item].working === working ? (
             <Lists key={item} opa={toDos[item].isChecked}>
-              {toDos[item].isEditing ? (
-                <ListTextInput
-                  value={edit}
-                  placeholder="원하는 값으로 변경"
-                  onChangeText={getEditText}
-                  onSubmitEditing={() => {
-                    editTextValue(item);
-                  }}
-                />
-              ) : (
+              {toDos[item].isEditing === false ? (
                 <ListText line={toDos[item].isChecked}>
                   {toDos[item].text}
                 </ListText>
+              ) : (
+                <ListTextInput
+                  placeholder="입력값을 변경해보세요."
+                  onChangeText={getEditText}
+                  value={edit}
+                  returnKeyType="done"
+                  onSubmitEditing={() => {
+                    saveEditValue(item);
+                  }}
+                />
               )}
-              <ListBtnContainer>
+              <ListBtnBox>
                 <Checkbox
-                  style={{ margin: 8 }}
+                  style={{
+                    marginRight: 12,
+                    color: toDos[item].isChecked ? "#4630EB" : undefined,
+                  }}
                   value={toDos[item].isChecked}
                   onValueChange={() => {
-                    handleCheckBox(item);
+                    handleCheck(item);
                   }}
-                  color={isChecked ? "white" : undefined}
                 />
                 <TouchableOpacity
                   onPress={() => {
-                    handleEdit(item);
+                    editToDos(item);
                   }}
                 >
-                  <MaterialIcons
-                    name="drive-file-rename-outline"
-                    size={24}
-                    color="tomato"
-                    style={{ marginLeft: 12 }}
-                  />
+                  <AntDesign name="edit" size={24} color="tomato" />
                 </TouchableOpacity>
                 <TouchableOpacity
+                  style={{ marginLeft: 12 }}
                   onPress={() => {
                     deleteToDos(item);
                   }}
                 >
-                  <Ionicons
-                    name="md-trash-outline"
-                    size={24}
-                    color="tomato"
-                    style={{ marginLeft: 12 }}
-                  />
+                  <Feather name="trash-2" size={24} color="tomato" />
                 </TouchableOpacity>
-              </ListBtnContainer>
+              </ListBtnBox>
             </Lists>
           ) : null;
         })}
@@ -212,26 +206,25 @@ const MainContainer = styled.View`
   flex: 1;
   background-color: ${theme.bg};
   padding: 0 40px;
+  font-family: "Cafe24Supermagic-Bold-v1.0";
 `;
 
-const HeaderContainer = styled.View`
+const HeaderBox = styled.View`
+  margin-top: 100px;
   flex-direction: row;
   justify-content: space-between;
-  margin-top: 100px;
 `;
 
 const HeaderBtn = styled.Text`
   color: white;
   font-size: 36px;
-  font-weight: 700;
 `;
 
 const InputBox = styled.TextInput`
   background-color: white;
   margin: 20px 0;
-  padding: 10px 0 10px 20px;
-  border-radius: 30px;
-  font-size: 18px;
+  padding: 10px 20px;
+  border-radius: 20px;
 `;
 
 const ListBox = styled.ScrollView``;
@@ -241,29 +234,26 @@ const Lists = styled.View`
   justify-content: space-between;
   align-items: center;
   background-color: ${theme.grey};
-  opacity: ${(props) => (props.opa ? 0.5 : 1)};
   margin-bottom: 10px;
-  padding: 10px 20px;
+  padding: 12px 20px;
   border-radius: 20px;
+  opacity: ${(props) => (props.opa ? 0.3 : 1)};
 `;
 
 const ListText = styled.Text`
-  text-decoration: ${(props) => (props.line ? "line-through" : "none")};
   color: white;
-  font-size: 16px;
-  font-weight: 500;
+  text-decoration: ${(props) => (props.line ? "line-through" : "none")};
 `;
 
 const ListTextInput = styled.TextInput`
   background-color: white;
   flex: 1;
-  border-radius: 8px;
-  font-size: 12px;
-  padding: 4px 0 4px 8px;
-  margin-right: 8px;
+  margin-right: 20px;
+  padding: 4px 12px;
+  border-radius: 10px;
 `;
 
-const ListBtnContainer = styled.View`
+const ListBtnBox = styled.View`
   flex-direction: row;
   align-items: center;
 `;
