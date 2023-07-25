@@ -48,7 +48,10 @@ export default function App() {
     if (text === "") {
       return;
     }
-    const newToDos = { ...toDos, [Date.now()]: { text, working, isChecked } };
+    const newToDos = {
+      ...toDos,
+      [Date.now()]: { text, working, isChecked, isEditing },
+    };
     setToDos(newToDos);
     saveToDos(newToDos);
     setText("");
@@ -102,6 +105,28 @@ export default function App() {
     await saveToDos(newToDos);
   };
 
+  const [isEditing, setEditing] = useState(false);
+
+  const handleEdit = async (value) => {
+    const newToDos = { ...toDos };
+    newToDos[value].isEditing = !newToDos[value].isEditing;
+    setToDos(newToDos);
+    await saveToDos(newToDos);
+  };
+
+  const [edit, setEdit] = useState("");
+  const getEditText = (payload) => {
+    setEdit(payload);
+  };
+  const editTextValue = async (value) => {
+    const newToDos = { ...toDos };
+    newToDos[value].text = edit;
+    newToDos[value].isEditing = !newToDos[value].isEditing;
+    setEdit("");
+    setToDos(newToDos);
+    await saveToDos(newToDos);
+  };
+
   return (
     <MainContainer>
       <HeaderContainer>
@@ -127,9 +152,20 @@ export default function App() {
         {Object.keys(toDos).map((item) => {
           return toDos[item].working === working ? (
             <Lists key={item} opa={toDos[item].isChecked}>
-              <ListText line={toDos[item].isChecked}>
-                {toDos[item].text}
-              </ListText>
+              {toDos[item].isEditing ? (
+                <ListTextInput
+                  value={edit}
+                  placeholder="원하는 값으로 변경"
+                  onChangeText={getEditText}
+                  onSubmitEditing={() => {
+                    editTextValue(item);
+                  }}
+                />
+              ) : (
+                <ListText line={toDos[item].isChecked}>
+                  {toDos[item].text}
+                </ListText>
+              )}
               <ListBtnContainer>
                 <Checkbox
                   style={{ margin: 8 }}
@@ -139,7 +175,11 @@ export default function App() {
                   }}
                   color={isChecked ? "white" : undefined}
                 />
-                <TouchableOpacity>
+                <TouchableOpacity
+                  onPress={() => {
+                    handleEdit(item);
+                  }}
+                >
                   <MaterialIcons
                     name="drive-file-rename-outline"
                     size={24}
@@ -212,6 +252,15 @@ const ListText = styled.Text`
   color: white;
   font-size: 16px;
   font-weight: 500;
+`;
+
+const ListTextInput = styled.TextInput`
+  background-color: white;
+  flex: 1;
+  border-radius: 8px;
+  font-size: 12px;
+  padding: 4px 0 4px 8px;
+  margin-right: 8px;
 `;
 
 const ListBtnContainer = styled.View`
