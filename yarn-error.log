@@ -1,8 +1,8 @@
 Arguments: 
-  /usr/local/bin/node /usr/local/bin/yarn add styled-components
+  /usr/local/bin/node /usr/local/bin/yarn add expo-updates
 
 PATH: 
-  /opt/homebrew/bin:/usr/local/bin:/System/Cryptexes/App/usr/bin:/usr/bin:/bin:/usr/sbin:/sbin:/var/run/com.apple.security.cryptexd/codex.system/bootstrap/usr/local/bin:/var/run/com.apple.security.cryptexd/codex.system/bootstrap/usr/bin:/var/run/com.apple.security.cryptexd/codex.system/bootstrap/usr/appleinternal/bin
+  /opt/homebrew/bin:/usr/local/bin:/System/Cryptexes/App/usr/bin:/usr/bin:/bin:/usr/sbin:/sbin:/var/run/com.apple.security.cryptexd/codex.system/bootstrap/usr/local/bin:/var/run/com.apple.security.cryptexd/codex.system/bootstrap/usr/bin:/var/run/com.apple.security.cryptexd/codex.system/bootstrap/usr/appleinternal/bin:/opt/homebrew/bin
 
 Yarn version: 
   1.22.19
@@ -14,7 +14,7 @@ Platform:
   darwin arm64
 
 Trace: 
-  Error: EACCES: permission denied, mkdir '/Users/mediumryan/Desktop/React-Native/Todo_app/node_modules/@babel/cli'
+  Error: EACCES: permission denied, mkdir '/Users/mediumryan/Desktop/React-Native/Todo_app/node_modules/@babel/core/node_modules'
 
 npm manifest: 
   {
@@ -28,13 +28,19 @@ npm manifest:
       "web": "expo start --web"
     },
     "dependencies": {
+      "@expo-google-fonts/inter": "^0.2.3",
+      "@react-native-async-storage/async-storage": "1.17.11",
       "expo": "~48.0.18",
+      "expo-checkbox": "~2.3.1",
+      "expo-font": "~11.1.1",
       "expo-status-bar": "~1.4.4",
       "react": "18.2.0",
-      "react-native": "0.71.8"
+      "react-native": "0.71.8",
+      "expo-updates": "~0.16.4"
     },
     "devDependencies": {
-      "@babel/core": "^7.20.0"
+      "@babel/core": "^7.20.0",
+      "babel-plugin-styled-components": "^2.1.4"
     },
     "private": true
   }
